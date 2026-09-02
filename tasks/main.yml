@@ -1,0 +1,71 @@
+---
+- name: Create cloudflared namespace
+  kubernetes.core.k8s:
+    name: "{{ cloudflared_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Create credentials secret
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: tunnel-credentials
+        namespace: "{{ cloudflared_namespace }}"
+      stringData:
+        credentials.json: "{{ lookup('ansible.builtin.template', role_path + '/templates/credentials.json.j2') }}"
+
+- name: Create config configmap
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: cloudflared-config
+        namespace: "{{ cloudflared_namespace }}"
+      data:
+        config.yaml: "{{ lookup('ansible.builtin.template', role_path + '/templates/config.yaml.j2') }}"
+
+- name: Deploy cloudflared
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: cloudflared
+        namespace: "{{ cloudflared_namespace }}"
+      spec:
+        replicas: "{{ cloudflared_replicas }}"
+        selector:
+          matchLabels:
+            app: cloudflared
+        template:
+          metadata:
+            labels:
+              app: cloudflared
+          spec:
+            containers:
+              - name: cloudflared
+                image: "{{ cloudflared_image_repository }}:{{ cloudflared_image_tag }}"
+                args:
+                  - tunnel
+                  - --config
+                  - /etc/cloudflared/config.yaml
+                  - run
+                volumeMounts:
+                  - name: config
+                    mountPath: /etc/cloudflared
+                  - name: creds
+                    mountPath: /etc/cloudflared-creds
+            volumes:
+              - name: config
+                configMap:
+                  name: cloudflared-config
+              - name: creds
+                secret:
+                  secretName: tunnel-credentials

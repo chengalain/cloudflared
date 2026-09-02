@@ -1,0 +1,8 @@
+tunnel: {{ cloudflared_tunnel_id }}
+credentials-file: /etc/cloudflared-creds/credentials.json
+ingress:
+{% for route in cloudflared_ingress %}
+  - hostname: {{ route.hostname }}
+    service: {{ route.service }}
+{% endfor %}
+  - service: http_status:404

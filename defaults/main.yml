@@ -4,4 +4,4 @@ cloudflared_replicas: 2
 
 # https://github.com/cloudflare/cloudflared/releases
 cloudflared_image_repository: cloudflare/cloudflared
-cloudflared_image_tag: "2026.8.3"
+cloudflared_image_tag: latest

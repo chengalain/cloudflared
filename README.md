@@ -25,9 +25,11 @@ dans un cluster Kubernetes, en manifests k8s bruts appliqués via
   pour les valeurs sensibles). Voir [`defaults/main.yml`](defaults/main.yml).
 - `cloudflared_tunnel_secret` authentifie le tunnel auprès de Cloudflare —
   à vaulter, jamais à committer en clair.
-- `cloudflared_image_tag` est figé (pas de `latest`) pour éviter qu'un pull
-  silencieux change l'image au prochain rollout/reschedule. Vérifie les
-  nouvelles versions sur
+- `cloudflared_image_tag` vaut `latest` par défaut. Fige une version
+  précise côté consommateur une fois que tu sais ce qui tourne
+  (`kubectl -n cloudflared get deploy cloudflared -o jsonpath='{.spec.template.spec.containers[0].image}'`)
+  pour éviter qu'un pull silencieux change l'image au prochain
+  rollout/reschedule — voir
   [github.com/cloudflare/cloudflared/releases](https://github.com/cloudflare/cloudflared/releases).
 - Pas de `handlers/` : les manifests sont appliqués tels quels, rien à
   redémarrer côté Ansible (un changement de ConfigMap/Secret ne redéclenche
@@ -43,7 +45,7 @@ Voir [`defaults/main.yml`](defaults/main.yml) pour la liste complète.
 | `cloudflared_namespace`          | `cloudflared`                | Namespace k8s cible                            |
 | `cloudflared_replicas`           | `2`                           | Replicas du Deployment                         |
 | `cloudflared_image_repository`   | `cloudflare/cloudflared`      | Image du conteneur                             |
-| `cloudflared_image_tag`          | `2026.8.3`                    | Version figée — voir [releases](https://github.com/cloudflare/cloudflared/releases) |
+| `cloudflared_image_tag`          | `latest`                      | À figer côté consommateur — voir [releases](https://github.com/cloudflare/cloudflared/releases) |
 | `cloudflared_tunnel_id`          | *(aucun, requis)*            | UUID du tunnel (`cloudflared tunnel create`)   |
 | `cloudflared_account_tag`        | *(aucun, requis)*            | Account tag Cloudflare                         |
 | `cloudflared_tunnel_secret`      | *(aucun, requis, sensible)*  | Secret du tunnel — à vaulter                   |
